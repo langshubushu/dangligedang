@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<title>当哩个当 · 山东快书带货词生成台</title>
+<link rel="stylesheet" href="style.css">
+</head><body>
+<div id="app">
+<header>
+  <div><h1>当哩个当<b>·</b>山东快书带货词生成台</h1>
+  <div class="sub">把曲艺格律翻译成机器能执行的约束</div></div>
+  <div class="spacer"></div>
+  <div class="casebar"><span>加载案例</span>
+    <button class="btn" data-case="apple">典型 · 栖霞苹果</button>
+    <button class="btn" data-case="onion">复杂 · 章丘大葱</button>
+    <button class="btn" data-case="beer">边界 · 青岛啤酒</button>
+  </div>
+  <div class="mode" id="mode">
+    <button data-mode="demo" class="on">演示引擎</button>
+    <button data-mode="llm">大模型</button>
+  </div>
+</header>
+<main>
+  <section class="col left">
+    <div class="h2">一 · 填货</div>
+    <div class="field"><label>产地</label><input id="f-origin" type="text" value="栖霞" placeholder="如：栖霞"></div>
+    <div class="field"><label>品名</label><input id="f-name" type="text" value="苹果" placeholder="如：苹果"></div>
+    <div class="field"><label>品类（决定用词库）</label><select id="f-cat"></select></div>
+    <div class="field"><label>卖点（选 1–2 个）</label><div class="chips" id="f-attrs"></div></div>
+    <div class="field"><label>价格话术</label><input id="f-price" type="text" value="三十八块" placeholder="如：三十八块"></div>
+    <div class="field"><label>直播场合</label><div class="seg" id="f-scene">
+      <button data-scene="开场">开场</button><button data-scene="讲品" class="on">讲品</button><button data-scene="促单">促单</button>
+    </div></div>
+    <div class="field"><label>押韵辙口</label><div class="chips" id="f-rime"></div></div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn primary" id="go" style="flex:1">出词</button>
+      <button class="btn" id="again">换一遍</button>
+    </div>
+    <div class="h2 toggle" id="llmHead" style="margin-top:22px">二 · 大模型接入<span class="caret">▸</span></div>
+    <div id="llmBody" class="collapsed">
+    <div class="field"><label>API Key（填了才走真模型，不填就是演示引擎）</label><input id="f-key" type="password" placeholder="sk-..."></div>
+    <div class="field"><label>或：把 DeepSeek 网页版的输出粘进来（自动找 JSON）</label>
+      <textarea id="f-paste" rows="3" placeholder='[{"text":"...","board":"落板"}]'></textarea>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="btn" id="pasteGo">导入并校验</button>
+      <button class="btn" id="promptCopy">复制提示词</button>
+    </div>
+    <div id="fbWrap" style="display:none;margin-bottom:12px">
+      <label style="font-size:12px;color:#7A6F5E">校验没通过，把这段再贴回 DeepSeek：</label>
+      <textarea id="f-fb" rows="3" style="margin-top:5px"></textarea>
+      <button class="btn" id="fbCopy" style="margin-top:6px">复制反馈</button>
+    </div>
+    <div style="font-size:12px;color:#7A6F5E;line-height:1.7">接入后生成流程变成：模型出词 → 机器校验 → 不合格自动重写（最多 3 次）→ 仍不合格退回模板。</div>
+    </div>
+  </section>
+  <section class="col mid">
+    <div class="h2 row">三 · 出词结果（点任意一句可直接改）<span class="seg small" id="srcSeg"><button data-src="tpl" class="on">模板写的</button><button data-src="model">模型写的</button></span></div>
+    <div class="lines" id="lines"></div>
+    <div style="margin-top:18px;display:flex;gap:8px">
+      <button class="btn" id="copy">复制全文</button>
+      <button class="btn" id="save">下载 txt</button>
+      <button class="btn ghost" id="promptBtn">看提示词版本</button>
+      <button class="btn ghost" id="cmpBtn">模型 vs 模板</button>
+    </div>
+  </section>
+  <section class="col right">
+    <div class="h2">四 · 机器校验（人改一点，它算一遍）</div>
+    <div class="score"><div class="v" id="score">--</div><div class="u">分 / 100</div></div>
+    <div class="bar"><i id="bar" style="width:0%"></i></div>
+    <div class="kpi">
+      <div><span>句数 / 字数</span><b id="k-pieces">--</b></div>
+      <div><span>口播时长</span><b id="k-sec">--</b></div>
+      <div><span>同辙率</span><b id="k-rime">--</b></div>
+      <div><span>风险词</span><b id="k-risk">--</b></div>
+    </div>
+    <div id="issues"></div>
+    <div class="h2" style="margin-top:18px">校验了哪几件事</div>
+    <div id="rules"></div>
+  </section>
+</main>
+<footer>
+  <span id="modeTag">演示引擎（离线，无需联网）</span>
+  <span class="grow"></span>
+  <span>约束：七字为主 · 一韵到底 · 板位标注 · 广告法自检</span>
+</footer>
+</div>
+<div class="modal" id="modal"><div class="box">
+  <h3 id="mTitle">提示词版本</h3>
+  <p id="mDesc"></p>
+  <div class="tabs" id="mTabs"><button data-v="1">v1 初版</button><button data-v="2">v2 加约束</button><button data-v="3" class="on">v3 生成 · 校验 · 回环</button></div>
+  <pre id="mBody"></pre>
+  <div style="display:flex;gap:8px;margin-top:12px"><button class="btn" id="mClose">关闭</button><button class="btn primary" id="mCopy">复制这段提示词</button></div>
+</div></div>
+<script src="app.js"></script>
+</body></html>
